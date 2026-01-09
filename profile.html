@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RAHAVE | PROFILE TERMINAL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap');
+        
+        :root {
+            --brand: #fbbf24;
+            --deep-space: #020617;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--deep-space); 
+            color: #f8fafc;
+            background-image: radial-gradient(circle at top right, #1e1b4b, #020617);
+            background-attachment: fixed;
+        }
+
+        .heading-astro { font-family: 'Syncopate', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+        }
+
+        .profile-hex {
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+        }
+
+        input {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid var(--border) !important;
+            color: white !important;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--brand) !important;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
+            outline: none;
+        }
+
+        .action-btn {
+            background: white;
+            color: black;
+            font-family: 'Syncopate', sans-serif;
+            font-size: 10px;
+            font-weight: 900;
+            transition: 0.4s;
+        }
+
+        .action-btn:hover {
+            background: var(--brand);
+            transform: scale(1.02);
+        }
+
+        .logout-btn {
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+        }
+    </style>
+</head>
+<body class="pb-20">
+
+    <header class="fixed top-0 w-full z-50 px-6 h-20 flex items-center justify-between border-b border-white/5 backdrop-blur-xl">
+        <button onclick="history.back()" class="text-slate-400 hover:text-white transition-colors">
+            <i class="fas fa-arrow-left-long"></i>
+        </button>
+        <h1 class="heading-astro text-[10px] font-black tracking-[0.5em] text-amber-500">Profile Terminal</h1>
+        <button onclick="location.href='index.html'" class="text-slate-400 hover:text-white">
+            <i class="fas fa-house"></i>
+        </button>
+    </header>
+
+    <main class="max-w-md mx-auto p-6 pt-32">
+        
+        <div class="text-center mb-12">
+            <div class="relative inline-block mb-6">
+                <div id="user-initials" class="w-24 h-24 profile-hex text-black flex items-center justify-center text-3xl font-800 shadow-[0_0_30px_rgba(251,191,36,0.2)]">
+                    R
+                </div>
+                <div class="absolute -bottom-1 -right-1 bg-white text-black w-8 h-8 rounded-full flex items-center justify-center border-4 border-[#020617] cursor-pointer">
+                    <i class="fas fa-bolt text-[10px]"></i>
+                </div>
+            </div>
+            <h2 id="display-name" class="heading-astro text-lg font-black leading-tight tracking-wider">Loading...</h2>
+            <p id="display-email" class="text-slate-500 text-[9px] font-bold tracking-[0.3em] uppercase mt-2"></p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <button onclick="location.href='my-orders.html'" class="glass-panel p-5 text-left active:scale-95 transition-all group">
+                <i class="fas fa-box-open text-amber-500 mb-3 block"></i>
+                <p class="text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] mb-1">Archive</p>
+                <p class="font-bold text-xs uppercase tracking-widest">My Orders</p>
+            </button>
+            <button class="glass-panel p-5 text-left active:scale-95 transition-all opacity-50 cursor-not-allowed">
+                <i class="fas fa-dna text-slate-400 mb-3 block"></i>
+                <p class="text-[8px] font-black uppercase text-slate-500 tracking-[0.2em] mb-1">Status</p>
+                <p class="font-bold text-xs uppercase tracking-widest">Rank: Elite</p>
+            </button>
+        </div>
+
+        <div class="space-y-6">
+            <div class="glass-panel p-6">
+                <h3 class="heading-astro text-[9px] text-amber-500 font-black mb-6">Identity Manifest</h3>
+                
+                <div class="space-y-4">
+                    <label class="text-[9px] font-black text-slate-500 uppercase ml-1 tracking-[0.2em]">Manifest Name</label>
+                    <div class="flex flex-col gap-3">
+                        <input type="text" id="name-input" placeholder="RE-IDENTIFY" 
+                               class="rounded-xl px-5 py-4 text-sm font-bold tracking-widest uppercase">
+                        <button onclick="updateName()" class="action-btn w-full py-4 rounded-xl">
+                            Update Identity
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel p-2 overflow-hidden">
+                <button onclick="resetPassword()" class="w-full flex items-center justify-between p-5 hover:bg-white/5 transition-all group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-amber-500">
+                            <i class="fas fa-shield-halved text-xs"></i>
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Reset Access Key</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-slate-600 text-[10px]"></i>
+                </button>
+                
+                <button onclick="location.href='support.html'" class="w-full flex items-center justify-between p-5 hover:bg-white/5 transition-all group border-t border-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-amber-500">
+                            <i class="fas fa-headset text-xs"></i>
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Contact Command</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-slate-600 text-[10px]"></i>
+                </button>
+
+                <div class="p-4">
+                    <button onclick="logoutUser()" class="logout-btn w-full flex items-center justify-center gap-3 p-4 rounded-xl font-black text-[10px] uppercase tracking-[0.3em] active:scale-95">
+                        <i class="fas fa-power-off text-[10px]"></i>
+                        Terminate Session
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-16 text-center">
+            <p class="text-[8px] text-slate-600 font-black uppercase tracking-[0.5em]">Rahave Legacy OS • v2.6.0</p>
+            <p class="text-[7px] text-slate-700 uppercase mt-4">Secure Link Established via Interstellar Protocol</p>
+        </div>
+    </main>
+
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { 
+        getAuth, 
+        onAuthStateChanged, 
+        updateProfile, 
+        sendPasswordResetEmail, 
+        signOut 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // UPDATED PRODUCTION CONFIGURATION
+    const firebaseConfig = {
+        apiKey: "AIzaSyBU2_pnmlVCOWnTrJFrCw3Il4h_ltQoW-U",
+        authDomain: "rahave04-astrol.firebaseapp.com",
+        databaseURL: "https://rahave04-astrol-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "rahave04-astrol",
+        storageBucket: "rahave04-astrol.firebasestorage.app",
+        messagingSenderId: "505320060434",
+        appId: "1:505320060434:web:9da2dcd4f85d38d4cacacb",
+        measurementId: "G-YFVTYTF5EL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Monitor Auth State
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('display-name').innerText = user.displayName || "Unknown Traveler";
+            document.getElementById('display-email').innerText = user.email;
+            document.getElementById('name-input').value = user.displayName || "";
+            const initial = (user.displayName || user.email).charAt(0).toUpperCase();
+            document.getElementById('user-initials').innerText = initial;
+        } else {
+            // Redirect to your specific auth page
+            window.location.href = "login.html";
+        }
+    });
+
+    // Exposed Functions to Window for HTML onClick attributes
+    window.updateName = async () => {
+        const newName = document.getElementById('name-input').value;
+        const btn = document.querySelector('.action-btn');
+        if(!newName) return;
+        
+        btn.innerText = "UPDATING...";
+        btn.disabled = true;
+
+        try {
+            await updateProfile(auth.currentUser, { displayName: newName });
+            location.reload();
+        } catch (err) { 
+            alert("Protocol Failure: " + err.message); 
+            btn.innerText = "Update Identity";
+            btn.disabled = false;
+        }
+    };
+
+    window.resetPassword = async () => {
+        const email = auth.currentUser.email;
+        if(confirm("Initiate password reset sequence for " + email + "?")) {
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert("Access key reset link transmitted to your email. Check your inbox.");
+            } catch (err) { 
+                alert("Signal Interrupted: " + err.message); 
+            }
+        }
+    };
+
+    window.logoutUser = async () => {
+        if(confirm("Confirm session termination?")) {
+            try {
+                await signOut(auth);
+                window.location.href = "index.html";
+            } catch (err) {
+                alert("Termination Failed: " + err.message);
+            }
+        }
+    };
+</script>
+</body>
+</html>

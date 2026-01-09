@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RAHAVE | All Products Archive</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="cdn_modules/Swiper@11.0.5/swiper-bundle.min.css">
+    <script src="cdn_modules/Swiper@11.0.5/swiper-bundle.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap');
+
+        :root {
+            --brand: #fbbf24;
+            --deep-space: #020617;
+            --zinc-900: #09090b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: var(--deep-space); 
+            color: white; 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .heading-astro { font-family: 'Syncopate', sans-serif; text-transform: uppercase; letter-spacing: -1px; }
+
+        /* NAVIGATION BAR */
+        .nav-glass {
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 20px 5%;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* CATEGORY PILLS */
+        .filter-container {
+            display: flex; gap: 15px; margin-bottom: 40px; justify-content: center;
+        }
+        .filter-btn {
+            padding: 12px 25px; border-radius: 50px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #94a3b8; font-size: 10px; font-weight: 800;
+            letter-spacing: 2px; text-transform: uppercase;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: pointer;
+        }
+        .filter-btn.active {
+            background: var(--brand); color: black; border-color: var(--brand);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+        }
+
+        /* PRODUCT GRID */
+        .archive-grid {
+            display: grid;
+            grid-template-cols: repeat(2, 1fr);
+            gap: 20px;
+            padding-bottom: 60px;
+        }
+        @media (min-width: 1024px) { .archive-grid { grid-template-cols: repeat(4, 1fr); gap: 40px; } }
+
+        .product-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 30px; padding: 15px;
+            transition: 0.5s; position: relative;
+            animation: cardFadeIn 0.8s ease backwards;
+        }
+        
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .product-card:hover { border-color: var(--brand); transform: translateY(-5px); }
+        
+        .img-wrapper {
+            aspect-ratio: 1/1.2; border-radius: 20px; overflow: hidden;
+            background: #000; margin-bottom: 20px;
+        }
+        .img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* PAGINATION */
+        .pagination-ctrl {
+            display: flex; justify-content: center; align-items: center; gap: 30px;
+            padding: 40px 0 100px;
+        }
+        .pag-btn {
+            background: white; color: black; border: none;
+            padding: 15px 35px; border-radius: 15px;
+            font-weight: 900; font-size: 11px; letter-spacing: 2px;
+            cursor: pointer; transition: 0.3s;
+        }
+        .pag-btn:disabled { opacity: 0.1; cursor: not-allowed; }
+
+        /* FOOTER */
+        footer {
+            background: #000; padding: 80px 5% 40px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .footer-logo { font-family: 'Syncopate'; font-size: 24px; color: var(--brand); margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <nav class="nav-glass">
+        <h1 class="heading-astro text-xl cursor-pointer" onclick="location.href='index.html'">RAHAVE</h1>
+        <div class="flex items-center gap-6">
+            <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+            <div class="relative cursor-pointer" onclick="location.href='cart.html'">
+                <i class="fa-solid fa-bag-shopping text-xl"></i>
+                <span id="cart-count" class="absolute -top-2 -right-2 bg-brand text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-32 px-[5%]">
+        <div class="text-center mb-16">
+            <h2 class="heading-astro text-4xl md:text-6xl font-black italic">The Archive</h2>
+            <p id="category-subtitle" class="text-slate-500 text-[10px] tracking-[0.5em] mt-4 uppercase">Classification: Sacred Streetwear</p>
+        </div>
+
+        <div class="filter-container">
+            <button id="btn-All" class="filter-btn active" onclick="setCategory('All', this)">All</button>
+            <button id="btn-Hoodies" class="filter-btn" onclick="setCategory('Hoodies', this)">Hoodies</button>
+            <button id="btn-T-Shirts" class="filter-btn" onclick="setCategory('T-Shirts', this)">T-Shirts</button>
+        </div>
+
+        <div id="product-display" class="archive-grid"></div>
+
+        <div class="pagination-ctrl" id="pag-wrap">
+            <button class="pag-btn" id="prev-btn" onclick="changePage(-1)">PREVIOUS</button>
+            <span id="page-indicator" class="heading-astro text-xs text-brand">01 / 01</span>
+            <button class="pag-btn" id="next-btn" onclick="changePage(1)">NEXT</button>
+        </div>
+    </main>
+
+    <footer>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-20">
+            <div>
+                <div class="footer-logo">RAHAVE</div>
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest leading-loose">
+                    High-end aesthetic meets planetary energy. Each drop is a limited manifest of the archive.
+                </p>
+            </div>
+            <div>
+                <h4 class="heading-astro text-[10px] text-brand mb-6">Navigation</h4>
+                <ul class="space-y-3 text-[11px] text-slate-400 uppercase font-black tracking-widest">
+                    <li class="hover:text-white transition cursor-pointer" onclick="location.href='index.html'">Home</li>
+                    <li class="hover:text-white transition cursor-pointer">Archive</li>
+                    <li class="hover:text-white transition cursor-pointer">Sizing</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="heading-astro text-[10px] text-brand mb-6">Contact</h4>
+                <ul class="space-y-3 text-[11px] text-slate-400 uppercase font-black tracking-widest">
+                    <li class="hover:text-white transition cursor-pointer">Instagram</li>
+                    <li class="hover:text-white transition cursor-pointer">Twitter</li>
+                    <li class="hover:text-white transition cursor-pointer">Oracle Support</li>
+                </ul>
+            </div>
+        </div>
+        <div class="pt-10 border-t border-white/5 flex justify-between items-center text-[9px] text-slate-700 font-black tracking-[0.3em] uppercase">
+            <p>© 2026 RAHAVE SACRED STUDIO</p>
+            <p>VOID-CRYPTED</p>
+        </div>
+    </footer>
+
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // 1. Official Production Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyBU2_pnmlVCOWnTrJFrCw3Il4h_ltQoW-U",
+        authDomain: "rahave04-astrol.firebaseapp.com",
+        databaseURL: "https://rahave04-astrol-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "rahave04-astrol",
+        storageBucket: "rahave04-astrol.firebasestorage.app",
+        messagingSenderId: "505320060434",
+        appId: "1:505320060434:web:9da2dcd4f85d38d4cacacb",
+        measurementId: "G-YFVTYTF5EL"
+    };
+
+    // 2. Initialize
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let masterList = [];
+    let filteredList = [];
+    let currentCategory = 'All';
+    let currentPage = 1;
+    const productsPerPage = 8;
+
+    // 3. Global Bridge for Buttons (Crucial for onclick attributes)
+    window.setCategory = (cat, btnElement) => {
+        currentCategory = cat;
+        currentPage = 1;
+        
+        // Update URL without refreshing
+        const url = new URL(window.location);
+        url.searchParams.set('filter', cat);
+        window.history.pushState({}, '', url);
+
+        updateFilterUI(cat);
+        applyFilters();
+    };
+
+    window.changePage = (step) => {
+        const totalPages = Math.ceil(filteredList.length / productsPerPage) || 1;
+        const nextStep = currentPage + step;
+        
+        if(nextStep >= 1 && nextStep <= totalPages) {
+            currentPage = nextStep;
+            renderPage();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    function updateFilterUI(cat) {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('active');
+            // Support highlighting based on text content if ID isn't found
+            if(b.innerText.trim().toLowerCase() === cat.toLowerCase()) {
+                b.classList.add('active');
+            }
+        });
+        
+        const subtitle = document.getElementById('category-subtitle');
+        if(subtitle) subtitle.innerText = `Classification: ${cat}`;
+    }
+
+    function applyFilters() {
+        if (!currentCategory || currentCategory === 'All') {
+            filteredList = [...masterList];
+        } else {
+            filteredList = masterList.filter(p => 
+                p.category && p.category.toLowerCase() === currentCategory.toLowerCase()
+            );
+        }
+        renderPage();
+    }
+
+    function renderPage() {
+        const grid = document.getElementById('product-display');
+        if(!grid) return;
+        
+        grid.innerHTML = "";
+
+        const startIndex = (currentPage - 1) * productsPerPage;
+        const endIndex = startIndex + productsPerPage;
+        const paginatedItems = filteredList.slice(startIndex, endIndex);
+
+        if (paginatedItems.length === 0) {
+            grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-600 heading-astro text-sm">Vault Connection Null</div>`;
+        }
+
+        paginatedItems.forEach((p, index) => {
+            const card = document.createElement('div');
+            card.className = "product-card group cursor-pointer";
+            card.style.animationDelay = `${index * 0.1}s`;
+            
+            // Fixed Navigation Logic
+            card.onclick = () => { window.location.href = `product.html?id=${p.id}`; };
+            
+            card.innerHTML = `
+                <div class="img-wrapper">
+                    <img src="${p.mainImg}" alt="${p.name}" loading="lazy">
+                </div>
+                <p class="text-[9px] text-brand font-black uppercase tracking-widest mb-1">
+                    ${p.category || 'Archive'} // ${p.planet || 'Neutral'}
+                </p>
+                <h3 class="heading-astro text-xs font-bold truncate mb-3">${p.name}</h3>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-black italic">₹${p.price}</span>
+                    <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-brand group-hover:text-black transition-all">
+                        <i class="fa-solid fa-plus text-[10px]"></i>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        // Pagination UI Update
+        const totalPages = Math.ceil(filteredList.length / productsPerPage) || 1;
+        const indicator = document.getElementById('page-indicator');
+        if(indicator) {
+            indicator.innerText = `${currentPage.toString().padStart(2, '0')} / ${totalPages.toString().padStart(2, '0')}`;
+        }
+        
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        if(prevBtn) prevBtn.disabled = (currentPage === 1);
+        if(nextBtn) nextBtn.disabled = (currentPage === totalPages);
+    }
+
+    // 4. Initial Launch Sequence
+    window.addEventListener('DOMContentLoaded', () => {
+        // Handle URL Params for filters coming from index.html
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterParam = urlParams.get('filter');
+        if(filterParam) currentCategory = filterParam;
+
+        // Fetch Data from Firebase
+        const productsRef = ref(db, 'products');
+        onValue(productsRef, (snap) => {
+            masterList = [];
+            snap.forEach(child => {
+                masterList.push({ id: child.key, ...child.val() });
+            });
+            updateFilterUI(currentCategory);
+            applyFilters();
+        });
+
+        // Update Cart Badge
+        const cart = JSON.parse(localStorage.getItem('rahave_cart')) || [];
+        const cartCount = document.getElementById('cart-count');
+        if(cartCount) cartCount.innerText = cart.length;
+    });
+</script>
+</body>
+</html>

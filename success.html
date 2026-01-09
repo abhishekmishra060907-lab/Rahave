@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RAHAVE | Alignment Confirmed</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@300;400;600;900&display=swap');
+        
+        body { 
+            background-color: #020617; 
+            color: #f8fafc; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .heading-astro { font-family: 'Syncopate', sans-serif; }
+
+        .success-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
+            background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(2,6,23,1) 100%);
+            position: relative;
+        }
+
+        .check-circle {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #fbbf24;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            color: #fbbf24;
+            font-size: 30px;
+            box-shadow: 0 0 40px rgba(251, 191, 36, 0.2);
+            animation: pulse-gold 2s infinite;
+        }
+
+        @keyframes pulse-gold {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .order-id-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px dashed rgba(255,255,255,0.2);
+            padding: 15px;
+            margin: 25px 0;
+            font-family: monospace;
+        }
+
+        .return-btn {
+            background: #fff;
+            color: #000;
+            padding: 18px 40px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 10px;
+            display: inline-block;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+
+        .return-btn:hover {
+            background: #fbbf24;
+        }
+
+        /* Ambient Background Elements */
+        .glow-orb {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
+            z-index: -1;
+            top: -50px;
+            left: -50px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="success-container">
+        <div class="glow-orb"></div>
+        
+        <div class="check-circle">
+            <i class="fa-solid fa-check"></i>
+        </div>
+
+        <h1 class="heading-astro text-sm tracking-[0.6em] text-white mb-2">ALIGNMENT SUCCESSFUL</h1>
+        <p class="text-[9px] text-slate-500 uppercase tracking-widest mb-8">The RAHAVE Nexus has received your transaction</p>
+
+        <div class="h-px w-12 bg-amber-500 mx-auto mb-8"></div>
+
+        <div class="text-left space-y-4 mb-8">
+            <div class="flex justify-between items-center">
+                <span class="text-[8px] text-slate-500 font-black uppercase tracking-widest">Transaction Status</span>
+                <span class="text-[8px] text-green-500 font-black uppercase tracking-widest italic">Verified</span>
+            </div>
+            
+            <div class="order-id-box">
+                <p class="text-[7px] text-slate-500 mb-1 uppercase tracking-tighter">Razorpay Reference ID</p>
+                <p id="pay-id-display" class="text-xs text-amber-500 font-bold tracking-widest">#RHP-XXXX-XXXX</p>
+            </div>
+        </div>
+
+        <p class="text-[10px] text-slate-400 leading-relaxed mb-10 px-4">
+            A digital receipt and shipping manifest will be transmitted to your email. Your gear is now being prepared for cosmic transit.
+        </p>
+
+        <a href="index.html" class="return-btn">
+            Continue Journey
+        </a>
+
+        <div class="mt-12">
+            <img src="logo.png" class="h-5 mx-auto opacity-20">
+            <p class="text-[6px] text-slate-700 uppercase tracking-[0.8em] mt-4 font-bold">ESTABLISHED IN THE COSMOS // 2026</p>
+        </div>
+    </div>
+
+    <script type="module">
+    // Using simple logic for the success page as it mostly reads data 
+    // If you need to verify the order status again, you can import Firebase here.
+    
+    function initSuccess() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Priority 1: Check for Razorpay Payment ID in URL
+        const payId = urlParams.get('pay_id') || urlParams.get('razorpay_payment_id');
+        
+        // Priority 2: Check for Order ID (if redirected from your internal database)
+        const orderId = urlParams.get('order_id');
+
+        const displayElement = document.getElementById('pay-id-display');
+
+        if (payId) {
+            displayElement.innerText = payId;
+        } else if (orderId) {
+            displayElement.innerText = "ORD-" + orderId.toUpperCase();
+        } else {
+            // Fallback: Generate a visual session reference if accessed without params
+            const sessionRef = "RHV-AUTH-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+            displayElement.innerText = sessionRef;
+        }
+
+        // Optional: Clear any remaining quick-buy items from local storage now that purchase is complete
+        localStorage.removeItem('rahave_quick_buy');
+    }
+
+    // Trigger on load
+    window.addEventListener('DOMContentLoaded', initSuccess);
+
+    // Cosmic animation feedback
+    console.log("RAHAVE Nexus: Alignment Verified. Transit Initialized.");
+</script>
+</body>
+</html>

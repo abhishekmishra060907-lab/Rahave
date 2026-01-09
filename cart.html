@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RAHAVE | Cart Terminal</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@300;400;600;900&display=swap');
+
+        :root {
+            --space-black: #020617;
+            --starlight: #f8fafc;
+            --cosmic-gold: #fbbf24;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--space-black);
+            color: var(--starlight);
+            margin: 0;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at top right, #1e1b4b, #020617);
+            background-attachment: fixed;
+        }
+
+        .heading-astro { font-family: 'Syncopate', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2.5rem;
+        }
+
+        .btn-gold {
+            background: var(--cosmic-gold);
+            color: #000;
+            font-weight: 900;
+            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .btn-gold:hover {
+            background: #ffffff;
+            transform: scale(1.02);
+        }
+
+        .qty-btn {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            transition: 0.3s;
+        }
+
+        .qty-btn:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body class="p-4 md:p-12">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-16">
+            <h1 class="heading-astro text-2xl font-black cursor-pointer" onclick="location.href='index.html'">RAHAVE</h1>
+            <a href="all-products.html" class="text-[10px] font-black uppercase tracking-widest text-amber-500">Back to Store</a>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div class="lg:col-span-2 space-y-4" id="cart-items-wrapper">
+                </div>
+
+            <div class="lg:col-span-1">
+                <div class="glass-panel p-8 sticky top-10">
+                    <h2 class="heading-astro text-xs mb-8 text-slate-400">Checkout Summary</h2>
+                    
+                    <div class="space-y-6">
+                        <div class="flex justify-between text-sm">
+                            <span class="font-bold text-slate-500 uppercase tracking-tighter">Subtotal</span>
+                            <span id="display-subtotal" class="font-black text-xl">₹0</span>
+                        </div>
+                        
+                        <div class="flex justify-between text-sm">
+                            <span class="font-bold text-slate-500 uppercase tracking-tighter">Shipping</span>
+                            <span class="text-green-500 font-black">COMPLIMENTARY</span>
+                        </div>
+
+                        <div class="border-t border-white/10 pt-6">
+                            <div class="flex justify-between items-center">
+                                <span class="heading-astro text-xs">Total</span>
+                                <span id="display-total" class="text-3xl font-black text-amber-500">₹0</span>
+                            </div>
+                        </div>
+
+                        <button onclick="proceedToCheckout()" class="w-full btn-gold py-6 rounded-2xl heading-astro text-[10px] mt-4">
+                            Proceed to Checkout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // 1. Official Production Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyBU2_pnmlVCOWnTrJFrCw3Il4h_ltQoW-U",
+        authDomain: "rahave04-astrol.firebaseapp.com",
+        databaseURL: "https://rahave04-astrol-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "rahave04-astrol",
+        storageBucket: "rahave04-astrol.firebasestorage.app",
+        messagingSenderId: "505320060434",
+        appId: "1:505320060434:web:9da2dcd4f85d38d4cacacb",
+        measurementId: "G-YFVTYTF5EL"
+    };
+
+    // 2. Initialize
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // 3. Helper: Strict Number Cleaning
+    window.toStrictNumber = (val) => {
+        if (!val) return 0;
+        const cleaned = val.toString().replace(/[^\d]/g, '');
+        return parseInt(cleaned, 10) || 0;
+    };
+
+    // 4. Main Render Function
+    window.renderCart = () => {
+        const wrapper = document.getElementById('cart-items-wrapper');
+        const cart = JSON.parse(localStorage.getItem('rahave_cart')) || [];
+        
+        if (cart.length === 0) {
+            wrapper.innerHTML = `<div class="glass-panel p-20 text-center">
+                <p class="heading-astro text-[10px] text-slate-500">Your Archive is Currently Empty</p>
+            </div>`;
+            updateFinalDisplay(0);
+            return;
+        }
+
+        let totalCalculation = 0;
+
+        wrapper.innerHTML = cart.map((item, i) => {
+            const itemPrice = window.toStrictNumber(item.price);
+            const itemQuantity = parseInt(item.quantity, 10) || 1;
+            const lineTotal = itemPrice * itemQuantity;
+            totalCalculation += lineTotal;
+
+            return `
+            <div class="glass-panel p-6 flex flex-col md:flex-row items-center gap-6 mb-4">
+                <img src="${item.img || item.mainImg}" class="w-24 h-32 object-cover rounded-2xl">
+                <div class="flex-grow text-center md:text-left">
+                    <h4 class="heading-astro text-[11px] font-black mb-1">${item.name}</h4>
+                    <p class="text-amber-500 font-bold">₹${itemPrice.toLocaleString('en-IN')}</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="changeQty(${i}, -1)" class="qty-btn">-</button>
+                    <span class="font-black text-sm w-6 text-center">${itemQuantity}</span>
+                    <button onclick="changeQty(${i}, 1)" class="qty-btn">+</button>
+                </div>
+                <div class="text-right">
+                    <p class="font-black text-white text-lg">₹${lineTotal.toLocaleString('en-IN')}</p>
+                    <button onclick="removeItem(${i})" class="text-[9px] text-red-500 font-bold uppercase tracking-widest mt-2">Remove</button>
+                </div>
+            </div>`;
+        }).join('');
+
+        updateFinalDisplay(totalCalculation);
+    };
+
+    // 5. Quantity Controls
+    window.changeQty = (index, delta) => {
+        let cart = JSON.parse(localStorage.getItem('rahave_cart'));
+        let item = cart[index];
+        let newQty = (parseInt(item.quantity, 10) || 1) + delta;
+
+        if (newQty < 1) return; // Cannot go below 1
+
+        // Sync with live database stock
+        const productRef = ref(db, `products/${item.id}`);
+        get(productRef).then((snapshot) => {
+            const liveStock = snapshot.exists() ? (snapshot.val().stock || 99) : 99;
+            
+            if (newQty > liveStock) {
+                alert(`Archive Alert: Only ${liveStock} units remaining.`);
+                newQty = liveStock;
+            }
+
+            cart[index].quantity = newQty;
+            localStorage.setItem('rahave_cart', JSON.stringify(cart));
+            window.renderCart();
+        });
+    };
+
+    window.removeItem = (index) => {
+        let cart = JSON.parse(localStorage.getItem('rahave_cart'));
+        cart.splice(index, 1);
+        localStorage.setItem('rahave_cart', JSON.stringify(cart));
+        window.renderCart();
+    };
+
+    function updateFinalDisplay(total) {
+        const formatted = `₹${total.toLocaleString('en-IN')}`;
+        document.getElementById('display-subtotal').innerText = formatted;
+        document.getElementById('display-total').innerText = formatted;
+    }
+
+    // 6. Checkout Logic
+    window.proceedToCheckout = () => {
+        const cart = JSON.parse(localStorage.getItem('rahave_cart')) || [];
+        if (cart.length === 0) return;
+
+        // Check if user is logged in
+        if (!auth.currentUser) {
+            // Store intent to checkout and redirect to login
+            sessionStorage.setItem('redirect_after_login', 'checkout.html');
+            location.href = 'login.html';
+        } else {
+            location.href = 'checkout.html';
+        }
+    };
+
+    // Start
+    window.addEventListener('DOMContentLoaded', window.renderCart);
+</script>
+</body>
+</html>

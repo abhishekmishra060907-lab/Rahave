@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RAHAVE | ACCESS TERMINAL</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap');
+
+        :root {
+            --brand: #fbbf24;
+            --deep-space: #020617;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        body { 
+            background-color: var(--deep-space); 
+            color: white; 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(251, 191, 36, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(30, 58, 138, 0.1) 0%, transparent 40%);
+        }
+
+        .heading-astro { font-family: 'Syncopate', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+
+        .auth-terminal {
+            background: var(--glass);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 10;
+        }
+
+        input {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid var(--border) !important;
+            color: white !important;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+            border-radius: 15px !important;
+            padding: 1.2rem !important;
+        }
+
+        input:focus {
+            border-color: var(--brand) !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            outline: none;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.1) !important;
+        }
+
+        #main-btn {
+            background: white !important;
+            color: black !important;
+            font-family: 'Syncopate', sans-serif;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            border-radius: 15px !important;
+            transition: all 0.4s ease !important;
+            text-transform: uppercase;
+        }
+
+        #main-btn:hover {
+            background: var(--brand) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3) !important;
+        }
+
+        .social-btn {
+            background: transparent !important;
+            border: 1px solid var(--border) !important;
+            color: #94a3b8 !important;
+            border-radius: 15px !important;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        .social-btn:hover {
+            border-color: white !important;
+            color: white !important;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: rgba(255,255,255,0.1);
+            font-size: 9px;
+            letter-spacing: 3px;
+            margin: 1.5rem 0;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .divider:not(:empty)::before { margin-right: 1.5rem; }
+        .divider:not(:empty)::after { margin-left: 1.5rem; }
+
+        .brand-logo {
+            font-size: 24px;
+            background: linear-gradient(to right, #fff, var(--brand));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="w-full max-w-md p-10 auth-terminal mx-6">
+        <div class="text-center mb-8">
+            <h1 class="heading-astro brand-logo font-black mb-2">RAHAVE</h1>
+            <div class="h-px w-8 bg-brand mx-auto mb-6"></div>
+            <h2 id="auth-title" class="heading-astro text-xs font-bold tracking-[0.3em]">Access Terminal</h2>
+            <p id="auth-subtitle" class="text-slate-500 text-[9px] uppercase tracking-[0.4em] mt-3">Project: RAHAVE04</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <button id="google-btn" class="social-btn flex items-center justify-center gap-2 py-3 active:scale-95 uppercase">
+                <i class="fab fa-google text-sm"></i> Google
+            </button>
+            <button id="apple-btn" class="social-btn flex items-center justify-center gap-2 py-3 active:scale-95 uppercase">
+                <i class="fab fa-apple text-sm"></i> Apple
+            </button>
+        </div>
+
+        <div class="divider uppercase">Security Sequence</div>
+
+        <form id="auth-form" class="space-y-4">
+            <input type="email" id="email" placeholder="IDENTIFICATION (EMAIL)" required class="w-full">
+            <input type="password" id="password" placeholder="ACCESS KEY (PASSWORD)" required class="w-full">
+
+            <button type="submit" id="main-btn" class="w-full py-5 active:scale-95 mt-2">
+                Verify Identity
+            </button>
+        </form>
+
+        <div class="mt-8 text-center space-y-4">
+            <button id="toggle-auth" class="text-slate-500 hover:text-brand font-black text-[10px] uppercase tracking-[0.2em] transition-all block w-full">
+                New Identity? <span class="text-white">Request Entry</span>
+            </button>
+            
+            <button class="text-slate-600 hover:text-white text-[9px] uppercase tracking-widest transition-all">
+                Alternative: Phone Verification
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            GoogleAuthProvider, 
+            OAuthProvider,
+            signInWithPopup 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // Updated with your project ID from the screenshot
+        const firebaseConfig = {
+            apiKey: "AIzaSyBU2_pnmlVCOWnTrJFrCw3Il4h_ltQoW-U",
+            authDomain: "rahave04.firebaseapp.com",
+            projectId: "rahave04",
+            storageBucket: "rahave04.appspot.com",
+            messagingSenderId: "505320060434",
+            appId: "1:505320060434:web:9da2dcd4f85d38d4cacacb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        let isLogin = true;
+
+        // UI Toggle
+        const toggleBtn = document.getElementById('toggle-auth');
+        toggleBtn.onclick = () => {
+            isLogin = !isLogin;
+            document.getElementById('auth-title').innerText = isLogin ? "Access Terminal" : "Initialize Archive";
+            document.getElementById('main-btn').innerText = isLogin ? "Verify Identity" : "Create Manifest";
+            toggleBtn.innerHTML = isLogin ? "New Identity? <span class='text-white'>Request Entry</span>" : "Existing Identity? <span class='text-white'>Recall Key</span>";
+        };
+
+        // Email/Pass Auth
+        document.getElementById('auth-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const btn = document.getElementById('main-btn');
+
+            btn.innerText = "PROCESSING...";
+            btn.disabled = true;
+
+            try {
+                if (isLogin) {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, pass);
+                }
+                window.location.href = 'index.html';
+            } catch (err) {
+                alert("Auth Error: " + err.code);
+                btn.innerText = isLogin ? "Verify Identity" : "Create Manifest";
+                btn.disabled = false;
+            }
+        };
+
+        // Social Logins
+        const loginWithProvider = async (provider) => {
+            try {
+                await signInWithPopup(auth, provider);
+                window.location.href = 'index.html';
+            } catch (err) {
+                alert("Provider Error: " + err.message);
+            }
+        };
+
+        document.getElementById('google-btn').onclick = () => loginWithProvider(new GoogleAuthProvider());
+        document.getElementById('apple-btn').onclick = () => loginWithProvider(new OAuthProvider('apple.com'));
+    </script>
+</body>
+</html>

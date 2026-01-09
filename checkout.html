@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RAHAVE | Secure Order Terminal</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@300;400;600;900&display=swap');
+        
+        :root {
+            --ra-gold: #fbbf24;
+            --ra-dark: #020617;
+            --ra-border: rgba(255, 255, 255, 0.08);
+        }
+
+        body { 
+            background-color: var(--ra-dark); 
+            color: #f8fafc; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .heading-astro { font-family: 'Syncopate', sans-serif; }
+
+        /* SCROLLBAR SILENCING */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+
+        .terminal-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: #020617;
+            position: relative;
+            border-left: 1px solid var(--ra-border);
+            border-right: 1px solid var(--ra-border);
+            padding: 24px;
+        }
+
+        /* MANIFEST STYLING */
+        .product-entry {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--ra-border);
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 15px;
+            border-radius: 2px;
+        }
+
+        .product-img {
+            width: 70px;
+            height: 90px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* INPUT MATRIX */
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block;
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .rahave-field {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--ra-border);
+            padding: 16px;
+            color: #fff;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .rahave-field:focus {
+            border-color: var(--ra-gold);
+            background: rgba(251, 191, 36, 0.05);
+        }
+
+        .total-panel {
+            background: #fff;
+            color: #000;
+            padding: 25px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .auth-button {
+            width: 100%;
+            background: var(--ra-gold);
+            color: #000;
+            padding: 22px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3);
+        }
+
+        .auth-button:disabled {
+            background: #334155;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        /* STATUS BADGE */
+        .status-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 8px;
+            font-weight: 900;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="terminal-container">
+        <div class="flex justify-between items-center mb-12">
+            <a href="index.html" class="text-white opacity-40 text-xs">
+                <i class="fa-solid fa-arrow-left-long mr-2"></i> RETURN
+            </a>
+            <div class="text-center">
+                <span class="heading-astro text-[9px] tracking-[0.5em] block">RAHAVE</span>
+                <span class="text-[7px] text-slate-500 tracking-[0.3em] uppercase">Security Level 4</span>
+            </div>
+            <div class="w-10"></div>
+        </div>
+
+        <div class="status-pill">ORDER STATUS: INITIALIZING MANIFEST</div>
+
+        <h2 class="heading-astro text-[10px] text-amber-500 tracking-[0.3em] mb-6">1. PRODUCT MANIFEST</h2>
+        <div id="manifest-injection-point">
+            </div>
+
+        <h2 class="heading-astro text-[10px] text-amber-500 tracking-[0.3em] mt-12 mb-6">2. FISCAL SUMMARY</h2>
+        <div class="total-panel">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-[9px] font-black uppercase tracking-widest text-slate-400">Total Items Count</span>
+                <span id="item-count-display" class="font-mono text-sm font-bold">0</span>
+            </div>
+            <div id="detailed-line-totals" class="space-y-2 mb-6 border-b border-black/5 pb-6">
+                </div>
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-[9px] font-black uppercase tracking-widest text-slate-400">Logistics (Global)</span>
+                <span class="text-[9px] font-black uppercase text-green-600">Complimentary</span>
+            </div>
+            <div class="flex justify-between items-end pt-4 border-t-2 border-black">
+                <span class="heading-astro text-[11px] font-bold">TOTAL PAYABLE</span>
+                <span id="master-total-display" class="font-mono text-3xl font-black tracking-tighter italic">₹0</span>
+            </div>
+        </div>
+
+        <h2 class="heading-astro text-[10px] text-amber-500 tracking-[0.3em] mb-6">3. SHIPPING COORDINATES</h2>
+        <form id="ra-checkout-form">
+            
+            <div class="form-group">
+                <label class="form-label">Full Legal Name</label>
+                <input type="text" id="ship-name" class="rahave-field" placeholder="John Doe" required>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="ship-email" class="rahave-field" placeholder="nexus@rahave.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone / WhatsApp</label>
+                    <input type="tel" id="ship-phone" class="rahave-field" placeholder="+91 00000 00000" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Complete Street Address</label>
+                <textarea id="ship-address" class="rahave-field h-28" placeholder="Street, House No, Landmark" required></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input type="text" id="ship-city" class="rahave-field" placeholder="City" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pincode</label>
+                    <input type="text" id="ship-pincode" class="rahave-field" placeholder="000000" required>
+                </div>
+            </div>
+
+            <div class="form-group mb-12">
+                <label class="form-label">State / Region</label>
+                <input type="text" id="ship-state" class="rahave-field" placeholder="State" required>
+            </div>
+
+            <button type="submit" id="master-pay-btn" class="auth-button">
+                AUTHORIZE PAYMENT
+            </button>
+        </form>
+
+        <div class="mt-12 text-center opacity-20">
+            <img src="logo.png" class="h-6 mx-auto mb-4 grayscale">
+            <p class="text-[7px] uppercase tracking-[0.5em]">RAHAVE Nexus Encryption // 256-Bit Secure</p>
+        </div>
+    </div>
+
+    <script type="module">
+    // 1. Production Modular SDK Imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // 2. Official Production Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyBU2_pnmlVCOWnTrJFrCw3Il4h_ltQoW-U",
+        authDomain: "rahave04-astrol.firebaseapp.com",
+        databaseURL: "https://rahave04-astrol-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "rahave04-astrol",
+        storageBucket: "rahave04-astrol.firebasestorage.app",
+        messagingSenderId: "505320060434",
+        appId: "1:505320060434:web:9da2dcd4f85d38d4cacacb",
+        measurementId: "G-YFVTYTF5EL"
+    };
+
+    // 3. Initialize Services
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let currentManifest = [];
+    let grandTotalCalculation = 0;
+    let authenticatedUserID = null;
+
+    // 4. Authentication Guard
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            authenticatedUserID = user.uid;
+            if(!document.getElementById('ship-email').value) {
+                document.getElementById('ship-email').value = user.email || "";
+            }
+        } else {
+            alert("SECURE ACCESS REQUIRED. REDIRECTING TO LOGIN.");
+            window.location.href = "login.html";
+        }
+    });
+
+    // 5. Data Parsing & Manifest Logic
+    function parseToCurrency(str) {
+        if(!str) return 0;
+        const cleaned = str.toString().replace(/[^0-9.-]+/g, "");
+        return parseFloat(cleaned) || 0;
+    }
+
+    window.runTerminalSetup = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const checkoutMode = urlParams.get('mode');
+        
+        currentManifest = (checkoutMode === 'quick') 
+            ? JSON.parse(localStorage.getItem('rahave_quick_buy')) || []
+            : JSON.parse(localStorage.getItem('rahave_cart')) || [];
+
+        if(currentManifest.length === 0) {
+            alert("TERMINAL ERROR: No Items Detected.");
+            window.location.href = "index.html";
+            return;
+        }
+        renderFullManifest();
+    };
+
+    function renderFullManifest() {
+        const manifestContainer = document.getElementById('manifest-injection-point');
+        const calculationLines = document.getElementById('detailed-line-totals');
+        
+        manifestContainer.innerHTML = "";
+        calculationLines.innerHTML = "";
+        grandTotalCalculation = 0;
+        let totalItemsCount = 0;
+
+        currentManifest.forEach((item) => {
+            const itemPrice = parseToCurrency(item.price);
+            const itemQty = parseInt(item.quantity || item.qty) || 1;
+            const lineTotal = itemPrice * itemQty;
+            
+            grandTotalCalculation += lineTotal;
+            totalItemsCount += itemQty;
+
+            manifestContainer.innerHTML += `
+                <div class="product-entry">
+                    <img src="${item.img || item.mainImg}" class="product-img">
+                    <div class="flex-1">
+                        <h3 class="heading-astro text-[9px] text-white tracking-widest mb-2">${item.name}</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <span class="text-[7px] text-slate-500 uppercase block mb-1">Celestial Fit</span>
+                                <span class="text-[10px] font-bold text-amber-500">${item.size || 'STD'}</span>
+                            </div>
+                            <div>
+                                <span class="text-[7px] text-slate-500 uppercase block mb-1">Volume</span>
+                                <span class="text-[10px] font-bold text-white">x${itemQty}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right flex flex-col justify-center">
+                        <span class="text-[8px] text-slate-600 block mb-1">SUB</span>
+                        <span class="font-mono text-xs font-bold">₹${lineTotal.toLocaleString('en-IN')}</span>
+                    </div>
+                </div>`;
+
+            calculationLines.innerHTML += `
+                <div class="flex justify-between text-[9px] uppercase tracking-tighter">
+                    <span class="text-slate-500">${item.name}</span>
+                    <span class="font-mono">${itemQty} x ₹${itemPrice} = ₹${lineTotal}</span>
+                </div>`;
+        });
+
+        document.getElementById('item-count-display').innerText = totalItemsCount;
+        document.getElementById('master-total-display').innerText = "₹" + grandTotalCalculation.toLocaleString('en-IN');
+    }
+
+    // 6. Razorpay Payment Trigger
+    document.getElementById('ra-checkout-form').onsubmit = function(e) {
+        e.preventDefault();
+        
+        if(!authenticatedUserID) {
+            alert("AUTH ERROR. RE-LOGIN REQUIRED.");
+            window.location.href = "login.html";
+            return;
+        }
+
+        const btn = document.getElementById('master-pay-btn');
+        btn.innerText = "AUTHENTICATING...";
+        btn.disabled = true;
+
+        const rzpOptions = {
+            "key": "rzp_live_XXXXXXXXXXXXXX", // Replace with your LIVE Razorpay Key
+            "amount": grandTotalCalculation * 100, 
+            "currency": "INR",
+            "name": "RAHAVE",
+            "description": "Order Manifest #" + Date.now(),
+            "handler": function (response) {
+                finalizeNexusOrder(response.razorpay_payment_id);
+            },
+            "modal": {
+                "ondismiss": function(){
+                    btn.innerText = "AUTHORIZE PAYMENT";
+                    btn.disabled = false;
+                }
+            },
+            "prefill": {
+                "name": document.getElementById('ship-name').value,
+                "email": document.getElementById('ship-email').value,
+                "contact": document.getElementById('ship-phone').value
+            },
+            "theme": { "color": "#fbbf24" }
+        };
+
+        const rzpInstance = new window.Razorpay(rzpOptions);
+        rzpInstance.open();
+    };
+
+    // 7. Push Order to Firebase
+    function finalizeNexusOrder(paymentID) {
+        const orderPayload = {
+            userId: authenticatedUserID,
+            paymentId: paymentID,
+            timestamp: Date.now(),
+            total: grandTotalCalculation,
+            items: currentManifest,
+            customer: {
+                name: document.getElementById('ship-name').value,
+                email: document.getElementById('ship-email').value,
+                phone: document.getElementById('ship-phone').value,
+                address: document.getElementById('ship-address').value,
+                city: document.getElementById('ship-city').value,
+                pincode: document.getElementById('ship-pincode').value,
+                state: document.getElementById('ship-state').value
+            },
+            status: "Order Received"
+        };
+
+        const ordersRef = ref(db, 'orders');
+        push(ordersRef, orderPayload).then(() => {
+            localStorage.removeItem('rahave_cart');
+            localStorage.removeItem('rahave_quick_buy');
+            
+            alert("ORDER SUCCESSFUL. REDIRECTING TO TRACKING.");
+            window.location.href = "profile.html"; // Or track-order.html
+        }).catch(error => {
+            console.error("Firebase Nexus Error:", error);
+            alert("Order saved locally but failed to sync. Contact RAHAVE support.");
+        });
+    }
+
+    // Run on Load
+    window.addEventListener('DOMContentLoaded', window.runTerminalSetup);
+</script>
+</body>
+</html>

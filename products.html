@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RAHAVE | Divine Gear</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@300;400;600;900&display=swap');
+        
+        body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        .heading-astro { font-family: 'Syncopate', sans-serif; }
+        .mobile-container { width: 100%; max-width: 500px; margin: 0 auto; min-height: 100vh; background: #020617; position: relative; }
+        
+        .rahave-header { background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .brand-shrine { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        
+        .share-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.03); border: 1px solid rgba(251, 191, 36, 0.2); color: #fbbf24; }
+
+        .main-stage-img { width: 100%; height: 60vh; object-fit: cover; }
+        .gallery-wrapper { display: flex; overflow-x: auto; gap: 12px; padding: 15px 20px; scrollbar-width: none; }
+        .gallery-wrapper::-webkit-scrollbar { display: none; }
+        .thumb-item { flex: 0 0 65px; height: 65px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .active-thumb { border: 2px solid #fbbf24 !important; }
+
+        .description-box { word-wrap: break-word; overflow-wrap: break-word; line-height: 1.6; white-space: normal; }
+
+        /* NEW: SIZE & QTY UI */
+        .size-chip { border: 1px solid rgba(255,255,255,0.1); padding: 10px 18px; font-size: 10px; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        .size-chip.active { background: white; color: black; border-color: white; }
+        .qty-box { border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 20px; padding: 5px 15px; width: fit-content; }
+
+        /* SCARCITY PULSE */
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .stock-low { color: #ef4444; animation: pulse-red 2s infinite; }
+
+        .cart-pill { position: fixed; bottom: 30px; right: 20px; background: #fbbf24; color: #000; padding: 12px 20px; border-radius: 40px; font-weight: 900; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4); z-index: 1000; display: none; }
+
+        .rahave-footer { background: #000; padding: 60px 20px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container border-x border-white/5 shadow-2xl">
+        
+        <nav class="fixed top-0 w-full max-w-[500px] z-[100] rahave-header px-6 py-3 flex justify-between items-center">
+            <a href="index.html" class="text-white text-lg"><i class="fa-solid fa-house-chimney"></i></a>
+            <div class="brand-shrine">
+                <span class="heading-astro text-[9px] tracking-[0.5em] text-white font-bold">RAHAVE</span>
+                <img src="logo.png" alt="RAHAVE" class="h-5 block">
+            </div>
+            <button onclick="shareLink()" class="share-btn"><i class="fa-solid fa-arrow-up-from-bracket"></i></button>
+        </nav>
+
+        <div class="pt-[75px]">
+            <div class="relative">
+                <img id="main-display" src="" class="main-stage-img">
+                <div class="absolute bottom-6 left-6 flex flex-col gap-2">
+                    <span id="label-category" class="bg-white text-black text-[8px] font-black px-3 py-1 uppercase tracking-tighter w-fit"></span>
+                    <span id="label-zodiac" class="bg-amber-500 text-black text-[8px] font-black px-3 py-1 uppercase tracking-tighter w-fit"></span>
+                </div>
+            </div>
+            <div id="gallery-strip" class="gallery-wrapper"></div>
+        </div>
+
+        <div class="px-6 py-6">
+            <div id="stock-status" class="text-[9px] font-black uppercase tracking-[0.2em] mb-2 hidden"></div>
+
+            <p id="prod-planet" class="text-amber-500 text-[9px] font-bold tracking-[0.4em] uppercase mb-1"></p>
+            <h1 id="prod-name" class="heading-astro text-3xl font-black uppercase mb-2 leading-none italic tracking-tighter"></h1>
+            <p id="prod-price" class="text-2xl font-mono text-white font-bold mb-6"></p>
+
+            <div class="description-box text-slate-400 text-xs mb-8 border-l-2 border-amber-500/30 pl-4">
+                <p id="prod-desc">Loading celestial specifications...</p>
+            </div>
+
+            <div id="size-section" class="mb-8 hidden">
+                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Select Size</p>
+                <div id="size-container" class="flex gap-2"></div>
+            </div>
+
+            <div class="mb-10">
+                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Quantity</p>
+                <div class="qty-box">
+                    <button onclick="changeQty(-1)" class="text-lg text-slate-400 p-2">-</button>
+                    <span id="qty-count" class="font-mono text-sm">1</span>
+                    <button onclick="changeQty(1)" class="text-lg text-slate-400 p-2">+</button>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3 mb-12">
+                <button id="buy-btn" onclick="buyNow()" class="w-full bg-white text-black py-5 rounded-sm font-black uppercase tracking-[0.1em] text-xs shadow-xl">Buy Now</button>
+                <button id="cart-btn" onclick="addToCart()" class="w-full border border-white/20 text-white py-4 rounded-sm font-bold uppercase tracking-[0.1em] text-[10px] hover:bg-white/5">Add to Cart</button>
+            </div>
+        </div>
+
+        <div id="recs-anchor" class="space-y-12 pb-20">
+            <div class="px-6">
+                <h3 class="heading-astro text-[9px] font-bold text-amber-500 uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                    <span class="w-4 h-px bg-amber-500"></span> Celestial Match
+                </h3>
+                <div id="rec-astro" class="flex gap-4 overflow-x-auto pb-2 scroll-hide"></div>
+            </div>
+            <div class="px-6">
+                <h3 class="heading-astro text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                    <span class="w-4 h-px bg-slate-400"></span> More <span id="rec-cat-name"></span>
+                </h3>
+                <div id="rec-category" class="flex gap-4 overflow-x-auto pb-2 scroll-hide"></div>
+            </div>
+        </div>
+
+        <footer class="rahave-footer">
+            <img src="logo.png" class="h-7 mx-auto mb-4 opacity-80">
+            <h2 class="heading-astro text-[10px] text-white tracking-[0.5em] mb-8">RAHAVE</h2>
+            <p class="text-[8px] text-slate-800 tracking-[0.3em] uppercase">© 2026 RAHAVE. ESTABLISHED IN THE COSMOS.</p>
+        </footer>
+
+        <div id="cart-indicator" class="cart-pill" onclick="location.href='checkout.html'">Cart (<span id="cart-count">0</span>)</div>
+    </div>
+
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // UPDATED PRODUCTION CONFIGURATION
+    const firebaseConfig = {
+        apiKey: "AIzaSyBU2_pnmlVCOWnTrJFrCw3Il4h_ltQoW-U",
+        authDomain: "rahave04-astrol.firebaseapp.com",
+        databaseURL: "https://rahave04-astrol-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "rahave04-astrol",
+        storageBucket: "rahave04-astrol.firebasestorage.app",
+        messagingSenderId: "505320060434",
+        appId: "1:505320060434:web:9da2dcd4f85d38d4cacacb",
+        measurementId: "G-YFVTYTF5EL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentId = urlParams.get('id');
+    let currentProductData = {};
+    let selectedSize = "";
+    let quantity = 1;
+
+    if(currentId) {
+        const productRef = ref(db, 'products/' + currentId);
+        onValue(productRef, (snap) => {
+            const data = snap.val();
+            if(!data) return;
+            currentProductData = data;
+
+            document.getElementById('prod-name').innerText = data.name;
+            document.getElementById('prod-price').innerText = "₹" + data.price;
+            document.getElementById('prod-planet').innerText = (data.planet || 'NEUTRAL') + " // RULER";
+            document.getElementById('label-zodiac').innerText = data.zodiac || 'UNIVERSAL';
+            document.getElementById('label-category').innerText = data.category;
+            document.getElementById('rec-cat-name').innerText = data.category + "s";
+            document.getElementById('main-display').src = data.mainImg;
+            document.getElementById('prod-desc').innerText = data.description || "Crafted from premium celestial materials.";
+
+            // STOCK / SCARCITY ENGINE
+            const stockEl = document.getElementById('stock-status');
+            const stockCount = parseInt(data.stock || 0);
+            if(stockCount > 0) {
+                stockEl.classList.remove('hidden');
+                if(stockCount < 10) {
+                    stockEl.innerHTML = `<i class="fa-solid fa-fire-flame-curved mr-2"></i> Only ${stockCount} left in the Archive`;
+                    stockEl.className = "text-[9px] font-black uppercase tracking-[0.2em] mb-2 stock-low";
+                } else {
+                    stockEl.innerText = "Available for Alignment";
+                    stockEl.className = "text-[9px] font-black uppercase tracking-[0.2em] mb-2 text-green-500";
+                }
+            } else if (stockCount === 0) {
+                stockEl.classList.remove('hidden');
+                stockEl.innerText = "Manifesting More (Sold Out)";
+                stockEl.className = "text-[9px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600";
+                document.getElementById('buy-btn').disabled = true;
+                document.getElementById('cart-btn').disabled = true;
+                document.getElementById('buy-btn').style.opacity = "0.3";
+            }
+
+            // SIZE MATRIX
+            const sizeSection = document.getElementById('size-section');
+            const sizeContainer = document.getElementById('size-container');
+            if(data.sizes && data.sizes.length > 0) {
+                sizeSection.classList.remove('hidden');
+                sizeContainer.innerHTML = "";
+                data.sizes.forEach(sz => {
+                    sizeContainer.innerHTML += `<div onclick="window.selectSize(this, '${sz}')" class="size-chip">${sz}</div>`;
+                });
+            } else {
+                sizeSection.classList.add('hidden');
+                selectedSize = "Standard"; 
+            }
+
+            const strip = document.getElementById('gallery-strip');
+            strip.innerHTML = renderThumb(data.mainImg, true);
+            if(data.gallery) {
+                Object.values(data.gallery).forEach(img => { 
+                    if(img) strip.innerHTML += renderThumb(img, false); 
+                });
+            }
+
+            loadAllRecommendations(data.zodiac, data.planet, data.category, currentId);
+        });
+    }
+
+    // EXPOSE TO WINDOW FOR ONCLICK EVENTS
+    window.selectSize = (el, sz) => {
+        document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        selectedSize = sz;
+    };
+
+    window.changeQty = (val) => {
+        quantity = Math.max(1, quantity + val);
+        document.getElementById('qty-count').innerText = quantity;
+    };
+
+    window.updateStage = (el, url) => {
+        document.getElementById('main-display').src = url;
+        document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active-thumb'));
+        el.classList.add('active-thumb');
+    };
+
+    window.shareLink = () => {
+        if (navigator.share) navigator.share({ title: 'RAHAVE', url: window.location.href });
+    };
+
+    function renderThumb(url, active) {
+        return `<div onclick="window.updateStage(this, '${url}')" class="thumb-item ${active ? 'active-thumb' : ''}"><img src="${url}" class="w-full h-full object-cover"></div>`;
+    }
+
+    window.addToCart = () => {
+        const obj = getCartObject();
+        if(!obj) return;
+        let cart = JSON.parse(localStorage.getItem('rahave_cart')) || [];
+        cart.push(obj);
+        localStorage.setItem('rahave_cart', JSON.stringify(cart));
+        updateCartIndicator();
+        alert("Sent to Cart.");
+    };
+
+    window.buyNow = () => {
+        const obj = getCartObject();
+        if(!obj) return;
+        localStorage.setItem('rahave_quick_buy', JSON.stringify([obj]));
+        window.location.href = 'checkout.html?mode=quick';
+    };
+
+    function getCartObject() {
+        if(!selectedSize && !document.getElementById('size-section').classList.contains('hidden')) {
+            alert("Please select a size fit.");
+            return null;
+        }
+        return {
+            id: currentId,
+            name: currentProductData.name,
+            price: currentProductData.price,
+            img: currentProductData.mainImg,
+            size: selectedSize,
+            quantity: quantity
+        };
+    }
+
+    function updateCartIndicator() {
+        const cart = JSON.parse(localStorage.getItem('rahave_cart')) || [];
+        const indicator = document.getElementById('cart-indicator');
+        if(cart.length > 0) {
+            indicator.style.display = 'block';
+            document.getElementById('cart-count').innerText = cart.length;
+        }
+    }
+
+    async function loadAllRecommendations(zodiac, planet, category, currentId) {
+        const productsRef = ref(db, 'products');
+        const snap = await get(productsRef);
+        const aList = document.getElementById('rec-astro');
+        const cList = document.getElementById('rec-category');
+        
+        aList.innerHTML = "";
+        cList.innerHTML = "";
+
+        snap.forEach((child) => {
+            const p = child.val();
+            if(child.key === currentId) return;
+            const card = `<a href="product.html?id=${child.key}" class="min-w-[130px] block"><div class="aspect-[4/5] rounded-sm overflow-hidden mb-2 border border-white/5"><img src="${p.mainImg}" class="w-full h-full object-cover"></div><p class="text-[8px] font-black uppercase text-white tracking-widest truncate">${p.name}</p></a>`;
+            if(p.zodiac === zodiac || p.planet === planet) aList.innerHTML += card;
+            if(p.category === category) cList.innerHTML += card;
+        });
+    }
+
+    updateCartIndicator();
+</script>
+</body>
+</html>

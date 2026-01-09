@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RAHAVE | The Interstellar Fashion Authority</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<link rel="stylesheet" href="cdn_modules/Swiper@11.0.5/swiper-bundle.min.css">
+
+<script src="cdn_modules/Swiper@11.0.5/swiper-bundle.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@300;400;600;900&display=swap');
+
+        :root {
+            --space-black: #020617;
+            --starlight: #f8fafc;
+            --cosmic-gold: #fbbf24;
+            --nebula-purple: #8b5cf6;
+            --blood-moon: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--space-black);
+            color: var(--starlight);
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            width: 100%;
+        }
+
+        .heading-astro { font-family: 'Syncopate', sans-serif; }
+
+        /* HEAVY DUTY SCROLLBAR */
+        ::-webkit-scrollbar { width: 14px; }
+        ::-webkit-scrollbar-track { background: var(--space-black); }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(180deg, #1e293b 0%, #fbbf24 100%); 
+            border: 4px solid var(--space-black);
+        }
+
+        /* GLASSMORPHISM - NO REDUCTION */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .hero-vignette {
+            background: radial-gradient(circle, rgba(2,6,23,0) 0%, rgba(2,6,23,0.8) 70%, rgba(2,6,23,1) 100%);
+        }
+
+        /* NAVIGATION PINCODE MODAL - PREMIUM MOBILE FIX */
+        #nav-pincode-panel {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 320px;
+            margin-top: 1rem;
+            z-index: 500;
+        }
+
+        @media (max-width: 768px) {
+            #nav-pincode-panel {
+                right: -50px;
+                width: 85vw;
+                position: fixed;
+                top: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        /* ANIMATIONS */
+        @keyframes nebula-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(251, 191, 36, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+        }
+
+        .active-alignment { border-color: var(--cosmic-gold) !important; animation: nebula-pulse 2s infinite; }
+
+        .product-card-img img { transition: transform 1.5s cubic-bezier(0.19, 1, 0.22, 1); }
+        .product-card:hover .product-card-img img { transform: scale(1.15); }
+
+        /* SEARCH OVERLAY FULL SCREEN */
+        #search-gate {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.99);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        /* SWIPER MOBILE OVERFLOW FIX */
+        .collectionSlider { width: 100%; overflow: visible !important; }
+    </style>
+</head>
+<body>
+    <div id="rahave-loader" class="fixed inset-0 z-[9999] bg-[#020617] flex flex-col items-center justify-center transition-opacity duration-1000">
+    <div class="relative">
+        <h1 class="heading-astro text-4xl md:text-6xl font-black tracking-[0.5em] text-white animate-pulse">
+            RAHAVE
+        </h1>
+        <div class="absolute -bottom-4 left-0 h-[2px] bg-amber-500 animate-[scan_2s_ease-in-out_infinite]"></div>
+    </div>
+    
+    <div class="mt-12 flex flex-col items-center">
+        <p id="loader-status" class="heading-astro text-[8px] text-amber-500 tracking-[0.8em] mb-2 uppercase">Connecting to Archive</p>
+        <div class="w-48 h-[1px] bg-white/10 relative overflow-hidden">
+            <div id="loader-progress" class="absolute top-0 left-0 h-full bg-white transition-all duration-500" style="width: 0%"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap');
+    
+    .heading-astro { font-family: 'Syncopate', sans-serif; }
+
+    @keyframes scan {
+        0% { width: 0%; opacity: 0; }
+        50% { width: 100%; opacity: 1; }
+        100% { width: 0%; opacity: 0; left: 100%; }
+    }
+
+    body.loading-locked {
+        overflow: hidden;
+    }
+</style>
+
+<script>
+    (function() {
+        // One-time session check
+        if (sessionStorage.getItem('rahave_initialized')) {
+            document.getElementById('rahave-loader').style.display = 'none';
+            return;
+        }
+
+        document.body.classList.add('loading-locked');
+        const loader = document.getElementById('rahave-loader');
+        const progress = document.getElementById('loader-progress');
+        const statusText = document.getElementById('loader-status');
+        
+        const phases = [
+            { p: 20, t: "Initializing Protocol" },
+            { p: 50, t: "Syncing Sacred Data" },
+            { p: 80, t: "Establishing Link" },
+            { p: 100, t: "Welcome to Rahave" }
+        ];
+
+        let phaseIdx = 0;
+
+        const updateLoader = () => {
+            if (phaseIdx < phases.length) {
+                progress.style.width = phases[phaseIdx].p + "%";
+                statusText.innerText = phases[phaseIdx].t;
+                phaseIdx++;
+                setTimeout(updateLoader, 600); // Speed of the loader
+            } else {
+                // Exit Animation
+                setTimeout(() => {
+                    loader.style.opacity = '0';
+                    document.body.classList.remove('loading-locked');
+                    sessionStorage.setItem('rahave_initialized', 'true');
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                    }, 1000);
+                }, 400);
+            }
+        };
+
+        window.addEventListener('load', updateLoader);
+    })();
+</script>
+
+
+    <div id="search-gate">
+        <button onclick="toggleSearchGate(false)" class="absolute top-8 right-8 md:top-12 md:right-12 text-4xl md:text-5xl text-white/20 hover:text-white transition-all">&times;</button>
+        <div class="w-full max-w-5xl px-4">
+            <h4 class="heading-astro text-amber-500 text-[10px] md:text-xs tracking-[1em] mb-4">UNIVERSAL SEARCH</h4>
+            <input type="text" id="master-search" placeholder="IDENTIFY ITEM..." class="bg-transparent border-b-2 border-white/10 w-full py-6 md:py-8 text-3xl md:text-7xl heading-astro outline-none uppercase text-white focus:border-amber-500 transition-all duration-700">
+            <div id="search-output" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mt-16 overflow-y-auto max-h-[50vh]"></div>
+        </div>
+    </div>
+
+    <nav class="fixed top-0 w-full z-[900] glass-panel px-4 md:px-16 py-4 md:py-6 flex justify-between items-center border-b border-white/5">
+    <div class="flex items-center gap-4 md:gap-12">
+        <button onclick="toggleSidebar(true)" class="text-white text-xl md:text-2xl hover:text-amber-400 transition transform active:scale-90 relative z-[999]">
+            <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+        <div class="flex items-center gap-2 md:gap-4 cursor-pointer" onclick="window.location.reload()">
+            <img src="logo.png" alt="RAHAVE LOGO" class="h-8 md:h-12 w-auto">
+            <div class="flex flex-col">
+                <h1 class="heading-astro text-lg md:text-2xl font-black tracking-tighter text-white">RAHAVE</h1>
+                <span class="text-[6px] md:text-[8px] tracking-[0.6em] text-amber-500 font-bold uppercase">Store </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="hidden lg:flex items-center gap-16 text-[10px] font-black uppercase tracking-[0.5em]">
+        <a href="#collections" class="hover:text-amber-400 transition-colors">Collections</a>
+        <a href="#astro-gate" class="hover:text-amber-400 transition-colors text-amber-500">Celestial Oracle</a>
+        <a href="#new-arrivals" class="hover:text-amber-400 transition-colors">Manifests</a>
+    </div>
+
+    <div class="flex items-center gap-4 md:gap-10">
+        <button onclick="toggleSearchGate(true)" class="text-lg md:text-xl hover:text-amber-400 transition">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+        
+        <a href="profile.html" class="text-lg md:text-xl hover:text-amber-400 transition">
+            <i class="fa-solid fa-user-astronaut"></i>
+        </a>
+
+        <div class="relative cursor-pointer group" onclick="window.location.href='cart.html'">
+            <i class="fa-solid fa-cart-shopping text-lg md:text-xl group-hover:text-amber-400"></i>
+            <span id="cart-badge" class="absolute -top-2 -right-2 md:-top-3 md:-right-3 bg-amber-500 text-black text-[8px] md:text-[10px] font-black w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center border-2 border-slate-900">0</span>
+        </div>
+    </div>
+</nav>
+
+    <div id="sidebar-terminal" class="fixed inset-y-0 left-0 w-full md:w-[450px] bg-slate-950 z-[1000] transform -translate-x-full transition-transform duration-700 p-10 md:p-16 flex flex-col gap-8 md:gap-12 border-r border-white/10">
+        <button onclick="toggleSidebar(false)" class="absolute top-6 right-6 md:top-8 md:right-8 text-4xl md:text-5xl text-white/20 hover:text-white">&times;</button>
+        <div class="mb-6 md:mb-10">
+            <img src="logo.png" class="h-16 md:h-20 mb-6">
+            <h3 class="heading-astro text-2xl md:text-3xl font-black">RAHAVE</h3>
+            <p class="text-slate-500 text-[10px] tracking-widest mt-2 uppercase font-bold">Terminal ID: AX-2026</p>
+        </div>
+        <div class="flex flex-col gap-6 md:gap-8 text-lg md:text-xl font-black tracking-[0.4em] heading-astro">
+            <a href="#" onclick="toggleSidebar(false)" class="hover:text-amber-400 transition-all">01. HOME HUB</a>
+            <a href="#collections" onclick="toggleSidebar(false)" class="hover:text-amber-400 transition-all">02. ARCHIVES</a>
+            <a href="#astro-gate" onclick="toggleSidebar(false)" class="hover:text-amber-400 transition-all">03. ORACLE</a>
+            <a href="#new-arrivals" onclick="toggleSidebar(false)" class="hover:text-amber-400 transition-all">04. MANIFESTS</a>
+            <a href="login.html" class="text-amber-500 text-xs md:text-sm mt-10 hover:tracking-[0.2em] transition-all">ENCRYPTED LOGIN &rarr;</a>
+</div>
+    </div>
+
+    <header class="relative h-[85vh] md:h-screen w-full flex items-center justify-center overflow-hidden bg-black">
+    <img src="k.jpg" 
+         class="absolute inset-0 w-full h-full object-cover z-0" 
+         alt="HERO">
+    
+    <div class="relative z-50 text-center px-4 md:px-6" style="text-shadow: 0px 4px 20px rgba(0,0,0,0.8);">
+        <h4 class="text-amber-500 font-black tracking-[0.8em] md:tracking-[1.5em] uppercase text-[8px] md:text-[10px] mb-8 md:mb-10 animate-pulse">Established 2026</h4>
+        <h2 class="heading-astro text-4xl md:text-[10rem] font-black leading-[1] md:leading-[0.85] mb-10 md:mb-12 tracking-tighter text-white">
+            DIVINE<br>
+            <span class="text-transparent" style="-webkit-text-stroke: 2px white;">ARMOR</span>
+        </h2>
+        <div class="flex flex-col md:flex-row gap-4 md:gap-8 justify-center items-center">
+            <a href="#collections" class="w-full md:w-auto bg-white text-black px-10 md:px-16 py-4 md:py-6 font-black uppercase tracking-[0.3em] text-[10px] hover:bg-amber-500 transition-all duration-500">Archives</a>
+            <a href="#astro-gate" class="w-full md:w-auto glass-panel px-10 md:px-16 py-4 md:py-6 font-black uppercase tracking-[0.3em] text-[10px] hover:bg-white hover:text-black transition-all duration-500 text-white">Divine Filter</a>
+        </div>
+    </div>
+</header>
+
+   <section id="collections" class="py-20 md:py-32 px-4 md:px-16 overflow-hidden">
+    <div class="flex justify-between items-end mb-12 md:mb-20 px-2 md:px-4">
+        <div>
+            <h3 class="heading-astro text-3xl md:text-5xl font-black uppercase mb-2 md:mb-4 italic">Archives</h3>
+            <p class="text-slate-500 text-[10px] md:text-sm uppercase tracking-widest font-bold">Category filtered manifests</p>
+        </div>
+        <div class="hidden md:flex gap-4">
+            <button id="col-prev" class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition"><i class="fa-solid fa-arrow-left"></i></button>
+            <button id="col-next" class="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition"><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <div class="swiper collectionSlider">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide h-[450px] md:h-[650px] group relative rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-slate-900 cursor-pointer" onclick="navigateByLogic('filter', 'Hoodies')">
+                <img src="https://i.ibb.co/TxCm61sH/Clothing-Brands-for-Women-in-India-480x480.jpg" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition duration-1000">
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                <div class="absolute bottom-10 md:bottom-12 left-10 md:left-12">
+                    <span class="text-amber-500 font-black tracking-[0.5em] text-[8px] md:text-[10px] uppercase block mb-3 md:mb-4">Archive-01</span>
+                    <h4 class="heading-astro text-3xl md:text-5xl font-black text-white italic">HOODIES</h4>
+                    <div class="w-0 group-hover:w-32 h-1 bg-amber-500 transition-all duration-700 mt-4 md:mt-6"></div>
+                </div>
+            </div>
+
+            <div class="swiper-slide h-[450px] md:h-[650px] group relative rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-slate-900 cursor-pointer" onclick="navigateByLogic('filter', 'Jackets')">
+                <img src="images/1.jpg" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition duration-1000">
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                <div class="absolute bottom-10 md:bottom-12 left-10 md:left-12">
+                    <span class="text-amber-500 font-black tracking-[0.5em] text-[8px] md:text-[10px] uppercase block mb-3 md:mb-4">Archive-02</span>
+                    <h4 class="heading-astro text-3xl md:text-5xl font-black text-white italic">JACKETS</h4>
+                    <div class="w-0 group-hover:w-32 h-1 bg-amber-500 transition-all duration-700 mt-4 md:mt-6"></div>
+                </div>
+            </div>
+
+            <div class="swiper-slide h-[450px] md:h-[650px] group relative rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-slate-900 cursor-pointer" onclick="navigateByLogic('filter', 'T-Shirts')">
+                <img src="images/2.jpg" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition duration-1000">
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                <div class="absolute bottom-10 md:bottom-12 left-10 md:left-12">
+                    <span class="text-amber-500 font-black tracking-[0.5em] text-[8px] md:text-[10px] uppercase block mb-3 md:mb-4">Archive-03</span>
+                    <h4 class="heading-astro text-3xl md:text-5xl font-black text-white italic">T-SHIRTS</h4>
+                    <div class="w-0 group-hover:w-32 h-1 bg-amber-500 transition-all duration-700 mt-4 md:mt-6"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <section id="astro-gate" class="py-20 md:py-32 px-4 md:px-16 bg-slate-950 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-[400px] md:w-[800px] h-[400px] md:h-[800px] bg-amber-500/5 rounded-full blur-[100px] md:blur-[150px] -translate-y-1/2 translate-x-1/2"></div>
+        
+        <div class="max-w-7xl mx-auto relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-16 md:mb-24 gap-8 md:gap-12">
+                <div class="text-center md:text-left">
+                    <h3 class="heading-astro text-3xl md:text-5xl font-black uppercase italic mb-4 md:mb-6">Celestial Oracle</h3>
+                    <p class="text-slate-500 max-w-lg font-bold uppercase text-[10px] md:text-xs tracking-widest leading-loose">Synchronize your vibrational armor with your ruling constellation.</p>
+                </div>
+                <div class="flex bg-white/5 p-1 md:p-2 rounded-full border border-white/10 glass-panel">
+                    <button onclick="switchOracle('zodiac')" id="tab-zodiac" class="px-6 md:px-12 py-3 md:py-4 text-[8px] md:text-[10px] font-black uppercase tracking-widest rounded-full bg-amber-500 text-black transition-all duration-500">Zodiac</button>
+                    <button onclick="switchOracle('planet')" id="tab-planet" class="px-6 md:px-12 py-3 md:py-4 text-[8px] md:text-[10px] font-black uppercase tracking-widest rounded-full text-slate-400 transition-all duration-500">Planet</button>
+                </div>
+            </div>
+
+            <div id="oracle-selector" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-6 mb-12 md:mb-20">
+                </div>
+
+            <div id="oracle-results" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-10">
+                <div class="col-span-full py-20 md:py-32 text-center glass-panel rounded-[2rem] md:rounded-[4rem] border-dashed">
+                    <i class="fa-solid fa-dharmachakra text-4xl md:text-6xl mb-6 md:mb-8 text-amber-500/20 animate-spin-slow"></i>
+                    <p class="heading-astro text-slate-500 tracking-[0.3em] md:tracking-[0.5em] text-[8px] md:text-xs">Awaiting Alignment Selection...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="new-arrivals" class="py-20 md:py-32 px-4 md:px-16 bg-white text-black rounded-[2.5rem] md:rounded-[8rem] mx-1 md:mx-10 shadow-2xl">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-12 md:mb-24 gap-6 md:gap-8">
+            <h3 class="heading-astro text-3xl md:text-6xl font-black uppercase italic italic">Latest Manifests</h3>
+            <div class="h-[1px] md:h-[2px] flex-grow bg-black/10 mx-12 hidden md:block"></div>
+            <a href="all-products.html" class="heading-astro text-[8px] md:text-[10px] font-black tracking-[0.3em] md:tracking-[0.4em] border-b-2 md:border-b-4 border-black pb-2 hover:text-amber-500 hover:border-amber-500 transition-all">VIEW ALL ACCESS</a>
+        </div>
+        
+        <div id="manifest-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-16">
+            <div class="animate-pulse bg-slate-200 aspect-[3/4] rounded-2xl md:rounded-[3rem]"></div>
+            <div class="animate-pulse bg-slate-200 aspect-[3/4] rounded-2xl md:rounded-[3rem]"></div>
+        </div>
+    </section>
+
+    <section class="py-20 md:py-32 px-4 md:px-6 border-t border-white/5 mt-16 md:mt-32">
+        <div class="max-w-6xl mx-auto glass-panel p-10 md:p-24 rounded-[2.5rem] md:rounded-[4rem] text-center relative overflow-hidden">
+            <h3 class="heading-astro text-2xl md:text-4xl font-black mb-4 md:mb-6 italic">Deployment Protocol</h3>
+            <p class="text-slate-400 font-black tracking-[0.2em] md:tracking-[0.4em] text-[8px] md:text-[10px] mb-8 md:mb-12 uppercase italic leading-loose">Check sector eligibility for physical delivery.</p>
+            
+            <div class="flex flex-col md:flex-row max-w-2xl mx-auto gap-4">
+                <input type="number" id="pin-footer-input" placeholder="SECTOR PINCODE" class="bg-white/5 border border-white/10 px-6 md:px-10 py-4 md:py-6 flex-grow outline-none font-black text-xs md:text-sm uppercase focus:border-amber-500 transition-all text-white text-center">
+                <button onclick="executePincodeCheck('footer')" class="bg-white text-black px-10 md:px-12 py-4 md:py-6 font-black uppercase tracking-widest text-[10px] hover:bg-amber-500 transition-all shadow-xl">Verify</button>
+            </div>
+            <p id="pin-footer-res" class="mt-8 md:mt-10 font-black uppercase tracking-[0.3em] text-[8px] md:text-xs hidden"></p>
+        </div>
+    </section>
+    
+    <footer class="bg-black pt-24 md:pt-40 pb-12 md:pb-16 px-6 md:px-16 border-t border-white/5">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-24">
+            <div class="col-span-1 md:col-span-2 text-center md:text-left">
+                <div class="flex items-center justify-center md:justify-start gap-4 mb-8 md:mb-10">
+                    <img src="logo.png" class="h-10 md:h-12">
+                    <h1 class="heading-astro text-3xl md:text-4xl font-black text-white">RAHAVE<span class="text-amber-500">.</span></h1>
+                </div>
+                <p class="text-slate-500 text-[10px] md:text-sm font-bold uppercase tracking-widest leading-loose max-w-md mx-auto md:mx-0">
+                    Engineered for high-vibration humans. Every piece is a manifest of frequency.
+                </p>
+            </div>
+
+            <div class="text-center md:text-left">
+                <h4 class="text-amber-500 heading-astro text-[10px] font-black tracking-[0.5em] mb-8 md:mb-12 italic">System</h4>
+                <ul class="flex flex-col gap-6 md:gap-8 text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">
+                    <li><a href="privacy.html">Privacy Protocol</a></li>
+                    <li><a href="shipping.html">Shipping Manifest</a></li>
+                </ul>
+            </div>
+
+            <div class="text-center md:text-left">
+                <h4 class="text-amber-500 heading-astro text-[10px] font-black tracking-[0.5em] mb-8 md:mb-12 italic">HQ</h4>
+                <p class="text-slate-500 text-[10px] md:text-[11px] font-black uppercase tracking-widest leading-loose italic">
+                    Universal Plaza, Sector 9<br>
+                    India - Planet Earth
+                </p>
+            </div>
+        </div>
+        <div class="mt-20 md:mt-40 pt-10 md:pt-12 border-t border-white/5 text-center">
+            <p class="text-[7px] md:text-[9px] font-black text-slate-700 tracking-[0.5em] uppercase">&copy; 2026 RAHAVE INTERSTELLAR. ALL SYSTEMS NOMINAL.</p>
+        </div>
+    </footer>
+
+        <script type="module">
+    // 1. Production Imports - Standardized to 10.7.1
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // 2. Production Config (RAHAVE NEXUS CORE)
+    const firebaseConfig = {
+        apiKey: "AIzaSyBU2_pnmlVCOWnTrJFrCw3Il4h_ltQoW-U",
+        authDomain: "rahave04-astrol.firebaseapp.com",
+        databaseURL: "https://rahave04-astrol-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "rahave04-astrol",
+        storageBucket: "rahave04-astrol.firebasestorage.app",
+        messagingSenderId: "505320060434",
+        appId: "1:505320060434:web:9da2dcd4f85d38d4cacacb",
+        measurementId: "G-YFVTYTF5EL"
+    };
+
+    // 3. Initialize Services
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // 4. UI DATA ARRAYS
+    const zodiacSigns = [
+        { name: "Aries", icon: "fa-fire", color: "text-orange-500" },
+        { name: "Taurus", icon: "fa-leaf", color: "text-green-500" },
+        { name: "Gemini", icon: "fa-wind", color: "text-cyan-400" },
+        { name: "Cancer", icon: "fa-moon", color: "text-slate-300" },
+        { name: "Leo", icon: "fa-sun", color: "text-amber-500" },
+        { name: "Virgo", icon: "fa-seedling", color: "text-emerald-600" },
+        { name: "Libra", icon: "fa-scale-balanced", color: "text-pink-400" },
+        { name: "Scorpio", icon: "fa-skull", color: "text-purple-600" },
+        { name: "Sagittarius", icon: "fa-location-arrow", color: "text-blue-500" },
+        { name: "Capricorn", icon: "fa-mountain", color: "text-stone-500" },
+        { name: "Aquarius", icon: "fa-droplet", color: "text-blue-300" },
+        { name: "Pisces", icon: "fa-fish", color: "text-teal-400" }
+    ];
+
+    const planets = [
+        { name: "Sun", icon: "fa-circle-dot", color: "text-amber-400" },
+        { name: "Moon", icon: "fa-moon", color: "text-slate-200" },
+        { name: "Mars", icon: "fa-circle", color: "text-red-500" },
+        { name: "Mercury", icon: "fa-mercury", color: "text-gray-400" },
+        { name: "Jupiter", icon: "fa-bolt", color: "text-indigo-400" },
+        { name: "Venus", icon: "fa-ring", color: "text-pink-300" },
+        { name: "Saturn", icon: "fa-ellipsis", color: "text-yellow-900" },
+        { name: "Rahu", icon: "fa-mask", color: "text-slate-600" },
+        { name: "Ketu", icon: "fa-wand-magic-sparkles", color: "text-rose-900" }
+    ];
+
+    // 5. ATTACH TO WINDOW (Crucial for HTML onclick to work)
+    window.toggleSidebar = (status) => {
+        const sidebar = document.getElementById('sidebar-terminal');
+        sidebar.style.transform = status ? 'translateX(0)' : 'translateX(-100%)';
+        document.body.style.overflow = status ? 'hidden' : 'auto';
+    };
+
+    window.toggleSearchGate = (status) => {
+        document.getElementById('search-gate').style.display = status ? 'flex' : 'none';
+    };
+
+    window.switchOracle = (type) => {
+        const container = document.getElementById('oracle-selector');
+        const tabZ = document.getElementById('tab-zodiac');
+        const tabP = document.getElementById('tab-planet');
+        container.innerHTML = "";
+        const list = (type === 'zodiac') ? zodiacSigns : planets;
+        
+        tabZ.className = (type === 'zodiac') ? "px-6 md:px-12 py-3 md:py-4 text-[8px] md:text-[10px] font-black uppercase tracking-widest rounded-full bg-amber-500 text-black transition-all" : "px-6 md:px-12 py-3 md:py-4 text-[8px] md:text-[10px] font-black uppercase tracking-widest rounded-full text-slate-400 transition-all";
+        tabP.className = (type === 'planet') ? "px-6 md:px-12 py-3 md:py-4 text-[8px] md:text-[10px] font-black uppercase tracking-widest rounded-full bg-amber-500 text-black transition-all" : "px-6 md:px-12 py-3 md:py-4 text-[8px] md:text-[10px] font-black uppercase tracking-widest rounded-full text-slate-400 transition-all";
+
+        list.forEach(item => {
+            const card = document.createElement('div');
+            card.className = "glass-panel p-6 md:p-10 rounded-2xl md:rounded-3xl text-center cursor-pointer group transition-all duration-700 hover:border-amber-500";
+            card.onclick = () => window.executeAstroFilter(item.name, card);
+            card.innerHTML = `
+                <i class="fa-solid ${item.icon} text-xl md:text-3xl ${item.color} mb-3 md:mb-6 group-hover:scale-125 transition"></i>
+                <p class="heading-astro text-[6px] md:text-[9px] font-black tracking-widest uppercase">${item.name}</p>`;
+            container.appendChild(card);
+        });
+    };
+
+    window.executeAstroFilter = async (tag, element) => {
+        document.querySelectorAll('#oracle-selector div').forEach(d => d.classList.remove('active-alignment'));
+        element.classList.add('active-alignment');
+        const output = document.getElementById('oracle-results');
+        output.innerHTML = `<div class="col-span-full py-20 text-center"><i class="fa-solid fa-atom animate-spin text-4xl text-amber-500"></i></div>`;
+        
+        try {
+            const productsRef = ref(db, 'products');
+            const snap = await get(productsRef);
+            output.innerHTML = "";
+            let count = 0;
+            snap.forEach((child) => {
+                const p = child.val();
+                if (p.zodiac === tag || p.planet === tag) {
+                    output.innerHTML += renderHeavyCard(p, child.key, false);
+                    count++;
+                }
+            });
+            if (count === 0) output.innerHTML = `<p class="col-span-full text-center text-slate-500 uppercase tracking-widest text-[8px] py-20">No Vibrational Match for ${tag}.</p>`;
+        } catch (e) { console.error("Archive Error", e); }
+    };
+
+    window.executePincodeCheck = async (source) => {
+        const inputId = (source === 'nav') ? 'pin-nav-input' : 'pin-footer-input';
+        const resId = (source === 'nav') ? 'pin-nav-res' : 'pin-footer-res';
+        const val = document.getElementById(inputId).value;
+        const res = document.getElementById(resId);
+        if(!val) return;
+        
+        res.classList.remove('hidden');
+        res.innerText = "QUERYING NODES...";
+
+        const pinRef = ref(db, 'delivery_pincodes');
+        const snap = await get(pinRef);
+        let matched = false;
+        snap.forEach(c => { if(c.val().pincode == val) matched = true; });
+        res.className = matched ? "mt-4 text-green-500 font-black uppercase text-[8px] md:text-[10px]" : "mt-4 text-red-500 font-black uppercase text-[8px] md:text-[10px]";
+        res.innerText = matched ? "SECTOR " + val + " AVAILABLE." : "SECTOR " + val + " NOT AVAILABLE.";
+    };
+
+    function renderHeavyCard(p, id, isLight) {
+        const textClass = isLight ? 'text-black' : 'text-white';
+        return `
+            <div class="product-card group relative bg-transparent border border-white/5 p-3 md:p-6 rounded-[1.5rem] md:rounded-[3rem] transition-all duration-700">
+                <div class="product-card-img relative aspect-[3/4] overflow-hidden rounded-[1.2rem] md:rounded-[2.5rem] mb-4 md:mb-8">
+                    <img src="${p.mainImg}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-4">
+                        <a href="product.html?id=${id}" class="w-full py-3 md:py-5 bg-white text-black text-[8px] md:text-[10px] font-black uppercase text-center hover:bg-amber-500">Manifest</a>
+                    </div>
+                </div>
+                <div class="px-1 md:px-2">
+                    <h4 class="${textClass} heading-astro text-[8px] md:text-[11px] font-black uppercase mb-1 md:mb-4 leading-tight">${p.name}</h4>
+                    <p class="text-amber-500 font-black text-xs md:text-sm">₹${p.price}</p>
+                </div>
+            </div>`;
+    }
+
+    window.navigateByLogic = (type, value) => { window.location.href = `all-products.html?${type}=${value}`; };
+
+    // 6. INITIALIZATION SEQUENCE
+    document.addEventListener('DOMContentLoaded', () => {
+        // Fetch Manifests (Latest Products)
+        onValue(ref(db, 'products'), (snap) => {
+            const grid = document.getElementById('manifest-grid');
+            if(!grid) return;
+            grid.innerHTML = "";
+            let count = 0;
+            snap.forEach((c) => { 
+                if(count < 6) {
+                    grid.innerHTML += renderHeavyCard(c.val(), c.key, true); 
+                    count++;
+                }
+            });
+        });
+
+        // Initialize Swiper
+        new Swiper(".collectionSlider", {
+            slidesPerView: 1.2,
+            spaceBetween: 15,
+            navigation: { nextEl: "#col-next", prevEl: "#col-prev" },
+            breakpoints: { 768: { slidesPerView: 2.2, spaceBetween: 30 } }
+        });
+
+        // Set Default Oracle
+        window.switchOracle('zodiac');
+        
+        // Update Cart Badge from LocalStorage
+        const cart = JSON.parse(localStorage.getItem('rahave_cart')) || [];
+        document.getElementById('cart-badge').innerText = cart.length;
+    });
+</script>
+</body>
+</html>
